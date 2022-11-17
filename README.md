@@ -9,7 +9,9 @@ These two players will take alternating turns to input moves via either coordina
 
 Moves will be validated in real-time, preventing players from making any illegal moves. As a stretch goal, we may want to implement real-time graphical feedback for where the player is attempting to place their stones (Go playing pieces). That is, in the case of an illegal move (space already occupied, Ko rule, etc.), we display a red “X” at the player’s proposed move location, and in the case of a legal move, we display a green check mark or other visual cue.
 
-We plan to implement real-time scoring for the game, with permanent displays for each of the two players’ scores somewhere in the game’s terminal window. Go has two different scoring systems (area or territory), determined by the players before the game. Just as with the input methods, we will decide on one or the other (or both, toggleable) depending on ease of implementation and quality.
+~~We plan to implement real-time scoring for the game, with permanent displays for each of the two players’ scores somewhere in the game’s terminal window. Go has two different scoring systems (area or territory), determined by the players before the game. Just as with the input methods, we will decide on one or the other (or both, toggleable) depending on ease of implementation and quality.~~ scoring Go ain't easy :([^1]
+
+[^1]: https://webdocs.cs.ualberta.ca/~mmueller/ps/goeval.pdf
 
 Finally, we hope to allow players to choose different board sizes (9x9, 13x13, 19x19, etc.) provided this does not significantly complicate the game’s implementation.
 
