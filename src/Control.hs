@@ -8,6 +8,7 @@ import Model
 import Model.Board
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Model.Player
+import qualified Model.Board as Board
 -- import Model.Player 
 
 -------------------------------------------------------------------------------
@@ -15,13 +16,26 @@ import Model.Player
 control :: PlayState -> BrickEvent n Tick -> EventM n (Next PlayState)
 control s ev = case ev of 
   -- AppEvent Tick                   -> nextS s =<< liftIO (play O s)
-  T.VtyEvent (V.EvKey V.KEnter _) -> nextS s =<< liftIO (play s)
-  T.VtyEvent (V.EvKey V.KUp   _)  -> Brick.continue (move up    s)
-  T.VtyEvent (V.EvKey V.KDown _)  -> Brick.continue (move down  s)
-  T.VtyEvent (V.EvKey V.KLeft _)  -> Brick.continue (move left  s)
-  T.VtyEvent (V.EvKey V.KRight _) -> Brick.continue (move right s)
-  T.VtyEvent (V.EvKey V.KEsc _)   -> Brick.halt s
-  _                               -> Brick.continue s -- Brick.halt s
+  T.VtyEvent (V.EvKey V.KEnter _)      -> nextS s =<< liftIO (play s)
+  T.VtyEvent (V.EvKey (V.KChar 'p') _) -> Brick.continue (pass s)
+  T.VtyEvent (V.EvKey (V.KChar 'r') _) -> nextS s $ resign s
+  T.VtyEvent (V.EvKey V.KUp   _)       -> Brick.continue (move up    s)
+  T.VtyEvent (V.EvKey V.KDown _)       -> Brick.continue (move down  s)
+  T.VtyEvent (V.EvKey V.KLeft _)       -> Brick.continue (move left  s)
+  T.VtyEvent (V.EvKey V.KRight _)      -> Brick.continue (move right s)
+  T.VtyEvent (V.EvKey V.KEsc _)        -> Brick.halt s
+  _                                    -> Brick.continue s -- Brick.halt s
+
+
+-------------------------------------------------------------------------------
+pass :: PlayState -> PlayState
+-------------------------------------------------------------------------------
+pass s = s { psTurn = Board.flipXO (psTurn s)}
+
+-------------------------------------------------------------------------------
+resign :: PlayState -> Result Board
+-------------------------------------------------------------------------------
+resign s = Board.Win (Board.flipXO (psTurn s))
 
 -------------------------------------------------------------------------------
 move :: (Pos -> Pos) -> PlayState -> PlayState
@@ -42,12 +56,12 @@ play s = put board turn <$> getPos turn s
 -- | psTurn s == xo = put (psBoard s) xo <$> getPos xo s 
 -- | otherwise      = return Retry
 
-getPos :: XO -> PlayState -> IO Pos
+getPos :: BW -> PlayState -> IO Pos
 getPos xo s = getStrategy xo s (psPos s) (psBoard s) xo
 
-getStrategy :: XO -> PlayState -> Strategy 
-getStrategy X s = plStrat (psX s)
-getStrategy O s = plStrat (psO s)
+getStrategy :: BW -> PlayState -> Strategy 
+getStrategy B s = plStrat (psX s)
+getStrategy W s = plStrat (psO s)
 
 -------------------------------------------------------------------------------
 nextS :: PlayState -> Result Board -> EventM n (Next PlayState)

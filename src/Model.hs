@@ -25,7 +25,7 @@ data PlayState = PS
   , psO      :: Player.Player   -- ^ player O info
   , psScore  :: Score.Score     -- ^ current score
   , psBoard  :: Board.Board     -- ^ current board
-  , psTurn   :: Board.XO        -- ^ whose turn 
+  , psTurn   :: Board.BW        -- ^ whose turn 
   , psPos    :: Board.Pos       -- ^ current cursor
   , psResult :: Board.Result () -- ^ result      
   } 
@@ -36,7 +36,7 @@ init n = PS
   , psO      = Player.rando
   , psScore  = Score.init n
   , psBoard  = Board.init
-  , psTurn   = Board.X
+  , psTurn   = Board.B
   , psPos    = head Board.positions 
   , psResult = Board.Cont ()
   }

@@ -2,7 +2,7 @@
 module Model.Board 
   ( -- * Types
     Board
-  , XO (..)
+  , BW (..)
   , Pos (..)
   , Result (..)
 
@@ -31,11 +31,11 @@ import qualified Data.Map as M
 -- | Board --------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
-type Board = M.Map Pos XO
+type Board = M.Map Pos BW
 
-data XO 
-  = X 
-  | O
+data BW 
+  = B 
+  | W
   deriving (Eq, Show)
 
 data Pos = Pos 
@@ -44,7 +44,7 @@ data Pos = Pos
   }
   deriving (Eq, Ord)
 
-(!) :: Board -> Pos -> Maybe XO 
+(!) :: Board -> Pos -> Maybe BW 
 board ! pos = M.lookup pos board
 
 dim :: Int
@@ -65,12 +65,12 @@ init = M.empty
                  
 data Result a 
   = Draw 
-  | Win XO
+  | Win BW
   | Retry 
   | Cont a
   deriving (Eq, Functor, Show)
 
-put :: Board -> XO -> Pos -> Result Board
+put :: Board -> BW -> Pos -> Result Board
 put board xo pos = case M.lookup pos board of 
   Just _  -> Retry
   Nothing -> result (M.insert pos xo board) 
@@ -78,14 +78,14 @@ put board xo pos = case M.lookup pos board of
 result :: Board -> Result Board
 result b 
   | isFull b  = Draw
-  | wins b X  = Win  X 
-  | wins b O  = Win  O
+  | wins b B  = Win  B 
+  | wins b W  = Win  W
   | otherwise = Cont b
 
-wins :: Board -> XO -> Bool
+wins :: Board -> BW -> Bool
 wins b xo = or [ winsPoss b xo ps | ps <- winPositions ]
 
-winsPoss :: Board -> XO -> [Pos] -> Bool
+winsPoss :: Board -> BW -> [Pos] -> Bool
 winsPoss b xo ps = and [ b!p == Just xo | p <- ps ]
 
 winPositions :: [[Pos]]
@@ -123,11 +123,11 @@ right p = p
   { pCol = min dim (pCol p + 1) 
   } 
 
-boardWinner :: Result a -> Maybe XO
+boardWinner :: Result a -> Maybe BW
 boardWinner (Win xo) = Just xo
 boardWinner _        = Nothing
 
-flipXO :: XO -> XO
-flipXO X = O
-flipXO O = X
+flipXO :: BW -> BW
+flipXO B = W
+flipXO W = B
 

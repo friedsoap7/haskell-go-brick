@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Model.Score where
 
-import Model.Board (Result (..), XO (..))
+import Model.Board (Result (..), BW (..))
 
 -------------------------------------------------------------------------------
 -- | Score --------------------------------------------------------------------
@@ -9,8 +9,8 @@ import Model.Board (Result (..), XO (..))
 
 data Score = Score 
   { scMax  :: Int  -- ^ total number of boards
-  , scX    :: Int  -- ^ points for player X 
-  , scO    :: Int  -- ^ points for player O 
+  , scB    :: Int  -- ^ points for player X 
+  , scW    :: Int  -- ^ points for player O 
   , scD    :: Int  -- ^ drawn games 
   }
   deriving (Eq, Ord, Show)
@@ -18,27 +18,27 @@ data Score = Score
 init :: Int -> Score
 init n = Score n 0 0 0
 
-add :: Score -> Maybe XO -> Score
-add sc (Just X) = sc { scX = scX sc + 1 }
-add sc (Just O) = sc { scO = scO sc + 1 }
+add :: Score -> Maybe BW -> Score
+add sc (Just B) = sc { scB = scB sc + 1 }
+add sc (Just W) = sc { scW = scW sc + 1 }
 add sc Nothing  = sc { scD = scD sc + 1 }
 
-get :: Score -> XO -> Int
-get Score {..} X = scX 
-get Score {..} O = scO 
+get :: Score -> BW -> Int
+get Score {..} B = scB 
+get Score {..} W = scW 
 
 currRound :: Score -> Int
-currRound Score {..} = scX + scO + scD + 1
+currRound Score {..} = scB + scW + scD + 1
 
-startPlayer :: Score -> XO
+startPlayer :: Score -> BW
 startPlayer sc 
-  | even (currRound sc) = X
-  | otherwise           = O
+  | even (currRound sc) = B
+  | otherwise           = W
 
 winner :: Score -> Result () 
 winner sc@Score {..}
-  | scX > scO + left = Win X
-  | scO > scX + left = Win O
+  | scB > scW + left = Win B
+  | scW > scB + left = Win W
   | left == 0        = Draw
   | otherwise        = Cont ()
   where 

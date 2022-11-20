@@ -49,10 +49,10 @@ mkCell' s r c = center (mkXO xoMb)
     --   | r > c     = Just O 
     --   | otherwise = Nothing
 
-mkXO :: Maybe XO -> Widget n
+mkXO :: Maybe BW -> Widget n
 mkXO Nothing  = blockB
-mkXO (Just X) = blockX
-mkXO (Just O) = blockO
+mkXO (Just B) = blockX
+mkXO (Just W) = blockO
 
 blockB, blockX, blockO :: Widget n
 blockB = vBox (replicate 5 (str "     "))
