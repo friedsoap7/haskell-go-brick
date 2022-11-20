@@ -22,7 +22,7 @@ view' s =
       vTile [ mkRow s row | row <- [1..dim] ]
 
 header :: PlayState -> String
-header s = printf "Tic-Tac-Toe Turn = %s, row = %d, col = %d" (show (psTurn s)) (pRow p) (pCol p)
+header s = printf "Go Turn = %s, row = %d, col = %d" (show (psTurn s)) (pRow p) (pCol p)
   where 
     p    = psPos s
 
@@ -41,31 +41,31 @@ withCursor = modifyDefAttr (`withStyle` reverseVideo)
 
 mkCell' :: PlayState -> Int -> Int -> Widget n
 -- mkCell' _ r c = center (str (printf "(%d, %d)" r c))
-mkCell' s r c = center (mkXO xoMb)
+mkCell' s r c = center (mkBW bwMb)
   where 
-    xoMb      = psBoard s ! Pos r c
+    bwMb      = psBoard s ! Pos r c
     -- xoMb 
     --   | r == c    = Just X 
     --   | r > c     = Just O 
     --   | otherwise = Nothing
 
-mkXO :: Maybe BW -> Widget n
-mkXO Nothing  = blockB
-mkXO (Just B) = blockX
-mkXO (Just W) = blockO
+mkBW :: Maybe BW -> Widget n
+mkBW Nothing  = blockE
+mkBW (Just B) = blockB
+mkBW (Just W) = blockW
 
-blockB, blockX, blockO :: Widget n
-blockB = vBox (replicate 5 (str "     "))
-blockX = vBox [ str "X   X"
-              , str " X X "
-              , str "  X  "
-              , str " X X " 
-              , str "X   X"]
-blockO = vBox [ str "OOOOO"
+blockE, blockB, blockW :: Widget n
+blockE = vBox (replicate 5 (str "     "))
+blockB = vBox [ str "  O  "
+              , str " OOO "
+              , str "OOOOO"
+              , str " OOO " 
+              , str "  O  "]
+blockW = vBox [ str "  O  "
+              , str " O O "
               , str "O   O"
-              , str "O   O"
-              , str "O   O"
-              , str "OOOOO"]
+              , str " O O "
+              , str "  O  "]
 
 vTile :: [Widget n] -> Widget n
 vTile (b:bs) = vBox (b : [hBorder <=> b | b <- bs])

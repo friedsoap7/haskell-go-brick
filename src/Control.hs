@@ -26,42 +26,31 @@ control s ev = case ev of
   T.VtyEvent (V.EvKey V.KEsc _)        -> Brick.halt s
   _                                    -> Brick.continue s -- Brick.halt s
 
-
 -------------------------------------------------------------------------------
+otherPlayer :: PlayState -> BW
+otherPlayer s = Board.flipBW (psTurn s)
+
 pass :: PlayState -> PlayState
--------------------------------------------------------------------------------
-pass s = s { psTurn = Board.flipXO (psTurn s)}
+pass s = s { psTurn = otherPlayer s}
 
--------------------------------------------------------------------------------
 resign :: PlayState -> Result Board
--------------------------------------------------------------------------------
-resign s = Board.Win (Board.flipXO (psTurn s))
+resign s = Board.Win $ otherPlayer s
 
--------------------------------------------------------------------------------
 move :: (Pos -> Pos) -> PlayState -> PlayState
--------------------------------------------------------------------------------
 move f s = s { psPos = f (psPos s) }
 
--------------------------------------------------------------------------------
 play :: PlayState -> IO (Result Board)
 play s = put board turn <$> getPos turn s
   where
     board = psBoard s
     turn  = psTurn  s
 
--------------------------------------------------------------------------------
--- play :: XO -> PlayState -> IO (Result Board)
--------------------------------------------------------------------------------
--- play xo s
--- | psTurn s == xo = put (psBoard s) xo <$> getPos xo s 
--- | otherwise      = return Retry
-
 getPos :: BW -> PlayState -> IO Pos
-getPos xo s = getStrategy xo s (psPos s) (psBoard s) xo
+getPos bw s = getStrategy bw s (psPos s) (psBoard s) bw
 
 getStrategy :: BW -> PlayState -> Strategy 
-getStrategy B s = plStrat (psX s)
-getStrategy W s = plStrat (psO s)
+getStrategy B s = plStrat (psB s)
+getStrategy W s = plStrat (psW s)
 
 -------------------------------------------------------------------------------
 nextS :: PlayState -> Result Board -> EventM n (Next PlayState)

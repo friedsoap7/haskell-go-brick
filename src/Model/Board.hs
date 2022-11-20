@@ -14,7 +14,7 @@ module Model.Board
   , positions
   , emptyPositions
   , boardWinner
-  , flipXO
+  , flipBW
 
     -- * Moves
   , up
@@ -124,10 +124,10 @@ right p = p
   } 
 
 boardWinner :: Result a -> Maybe BW
-boardWinner (Win xo) = Just xo
+boardWinner (Win bw) = Just bw
 boardWinner _        = Nothing
 
-flipXO :: BW -> BW
-flipXO B = W
-flipXO W = B
+flipBW :: BW -> BW
+flipBW B = W
+flipBW W = B
 

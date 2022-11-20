@@ -21,8 +21,7 @@ human :: Player
 human = Player "human" (\p _ _ -> return p)
 
 rando :: Player 
-rando = Player "human" (\p _ _ -> return p)
--- rando = Player "machine" randomStrategy
+rando = Player "machine" randomStrategy
 
 randomStrategy :: a -> Board -> b -> IO Pos
 randomStrategy _ b _ = selectRandom (emptyPositions b) 

@@ -21,8 +21,8 @@ data State
   | Outro 
   
 data PlayState = PS
-  { psX      :: Player.Player   -- ^ player X info
-  , psO      :: Player.Player   -- ^ player O info
+  { psB      :: Player.Player   -- ^ player X info
+  , psW      :: Player.Player   -- ^ player O info
   , psScore  :: Score.Score     -- ^ current score
   , psBoard  :: Board.Board     -- ^ current board
   , psTurn   :: Board.BW        -- ^ whose turn 
@@ -32,8 +32,8 @@ data PlayState = PS
 
 init :: Int -> PlayState
 init n = PS 
-  { psX      = Player.human
-  , psO      = Player.rando
+  { psB      = Player.human
+  , psW      = Player.human
   , psScore  = Score.init n
   , psBoard  = Board.init
   , psTurn   = Board.B
@@ -49,7 +49,7 @@ isCurr s r c = Board.pRow p == r && Board.pCol p == c
 next :: PlayState -> Board.Result Board.Board -> Either (Board.Result ()) PlayState
 next s Board.Retry     = Right s
 next s (Board.Cont b') = Right (s { psBoard = b'
-                                  , psTurn  = Board.flipXO (psTurn s) })
+                                  , psTurn  = Board.flipBW (psTurn s) })
 next s res             = nextBoard s res 
 
 nextBoard :: PlayState -> Board.Result a -> Either (Board.Result ()) PlayState

@@ -9,8 +9,8 @@ import Model.Board (Result (..), BW (..))
 
 data Score = Score 
   { scMax  :: Int  -- ^ total number of boards
-  , scB    :: Int  -- ^ points for player X 
-  , scW    :: Int  -- ^ points for player O 
+  , scB    :: Int  -- ^ points for Black
+  , scW    :: Int  -- ^ points for White
   , scD    :: Int  -- ^ drawn games 
   }
   deriving (Eq, Ord, Show)
