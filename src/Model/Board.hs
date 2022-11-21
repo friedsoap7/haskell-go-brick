@@ -82,70 +82,49 @@ result b
   | wins b B  = Win  B
   | wins b W  = Win  W
   | otherwise = Draw
--- | isFull b  = Draw
 
 wins :: Board -> BW -> Bool
-wins b bw = let 
-  score = countE b `add` countBW b
-  add (x,y) (a,b) = (x+a, y+b)
+wins b bw = let
+  score = countE b +++ countBW b
    in case bw of
     B -> uncurry (>) score
     W -> uncurry (<) score
--- wins b xo = or [ winsPoss b xo ps | ps <- winPositions ]
-
-winsPoss :: Board -> BW -> [Pos] -> Bool
-winsPoss b xo ps = and [ b!p == Just xo | p <- ps ]
-
-winPositions :: [[Pos]]
-winPositions = rows ++ cols ++ diags
-
-rows, cols, diags :: [[Pos]]
-rows  = [[Pos r c | c <- [1..dim]] | r <- [1..dim]]
-cols  = [[Pos r c | r <- [1..dim]] | c <- [1..dim]]
-diags = [[Pos i i | i <- [1..dim]], [Pos i (dim+1-i) | i <- [1..dim]]]
-
-isFull :: Board -> Bool
-isFull b = M.size b == dim * dim
 
 countE :: Board -> (Int, Int)
 countE b = foldl f (0,0) positions
   where
-    f (countB, countW) pos = (countB + fromEnum (sel2 $ res pos), countW + fromEnum (sel3 $ res pos))
-    res pos = dfs b pos S.empty
+    f (countB, countW) startPos = (countB + fromEnum foundB, countW + fromEnum foundW)
+      where
+        (_, foundB, foundW) = explore b startPos S.empty
 
 countBW :: Board -> (Int, Int)
 countBW = M.foldlWithKey f (0,0)
   where
-    f (countB, countW) _ v = if v == B then (countB + 1, countW) else (countB, countW + 1)
+    f (countB, countW) _ v = (countB, countW) +++ (fromEnum (v == B), fromEnum (v == W))
 
-sel1 (x, _, _) = x
-sel2 (_, y, _) = y
-sel3 (_, _, z) = z
-
-dfs :: Board -> Pos -> S.Set Pos -> (S.Set Pos, Bool, Bool)
-dfs b p v = (sel1 ress, sel2 ress || foundB, sel3 ress || foundW)
+explore :: Board -> Pos -> S.Set Pos -> (S.Set Pos, Bool, Bool)
+explore b p v = (recVisited, recFoundB || found B, recFoundW || found W)
   where
-    f pos    = pos `M.notMember` b && pos `S.notMember` v
-    g bw pos = M.lookup pos b == Just bw
-    neighPos = map (\x -> x p) [left, right, down, up]
-    neighEmp = S.fromList $ filter f neighPos
-    newV     = v `S.union` neighEmp
-    foundB   = any (g B) neighPos
-    foundW   = any (g W) neighPos
-    res p'   = dfs b p' newV
-    ress     = S.foldl h (newV, False, False) neighEmp
+    found bw = any (g bw) (neighborsOf p)
+    g bw pos = b ! pos == Just bw
+    (recVisited, recFoundB, recFoundW) = S.foldl h (visited, False, False) emptyNeighbors
       where
-        -- h (sp,b1,b2) (sp',b1',b2') = (sp `S.union` sp', b1 || b1', b2 || b2')
-        h (sp,b1,b2) x = (sp `S.union` sp', b1 || b1', b2 || b2')
+        emptyNeighbors = S.fromList $ filter f (neighborsOf p)
           where
-            (sp', b1', b2') = res x
+            f pos = pos `M.notMember` b && pos `S.notMember` v
+        visited     = v `S.union` emptyNeighbors
+        h (sp,b1,b2) neigh = (sp `S.union` sp', b1 || b1', b2 || b2')
+          where
+            (sp',b1',b2') = explore b neigh visited
 
+neighborsOf :: Pos -> [Pos]
+neighborsOf pos = map f directions
+  where
+    f dir = dir pos
+    directions = [left, right, up, down]
 
-tmp = M.fromList [(Pos 1 1, B), (Pos 1 2, B), (Pos 2 1, B), (Pos 1 3, B), (Pos 3 1, B), (Pos 2 2, B),
-                  (Pos 1 4, W), (Pos 2 3, W), (Pos 3 2, W), (Pos 4 1, W)]
--- >>> wins tmp W
--- True
---
+(+++) :: (Num a, Num b) => (a, b) -> (a, b) -> (a, b)
+(+++) (x1, x2) (y1, y2) = (x1 + y1, x2 + y2)
 
 -------------------------------------------------------------------------------
 -- | Moves 
