@@ -16,8 +16,8 @@ import qualified Model.Board as Board
 control :: PlayState -> BrickEvent n Tick -> EventM n (Next PlayState)
 control s ev = case ev of 
   -- AppEvent Tick                   -> nextS s =<< liftIO (play O s)
-  T.VtyEvent (V.EvKey V.KEnter _)      -> nextS s =<< liftIO (play s)
-  T.VtyEvent (V.EvKey (V.KChar 'p') _) -> Brick.continue (pass s)
+  T.VtyEvent (V.EvKey V.KEnter _)      -> nextS s { psPass = 0 } =<< liftIO (play s)
+  T.VtyEvent (V.EvKey (V.KChar 'p') _) -> nextS s { psPass = psPass s + 1 } (pass s)
   T.VtyEvent (V.EvKey (V.KChar 'r') _) -> nextS s $ resign s
   T.VtyEvent (V.EvKey V.KUp   _)       -> Brick.continue (move up    s)
   T.VtyEvent (V.EvKey V.KDown _)       -> Brick.continue (move down  s)
@@ -30,8 +30,11 @@ control s ev = case ev of
 otherPlayer :: PlayState -> BW
 otherPlayer s = Board.flipBW (psTurn s)
 
-pass :: PlayState -> PlayState
-pass s = s { psTurn = otherPlayer s}
+pass :: PlayState -> Result Board
+pass s 
+  | psPass s >= 1 = Board.result (psBoard s)
+  | otherwise     = Cont (psBoard s)
+
 
 resign :: PlayState -> Result Board
 resign s = Board.Win $ otherPlayer s

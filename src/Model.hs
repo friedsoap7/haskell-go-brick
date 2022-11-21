@@ -21,13 +21,14 @@ data State
   | Outro 
   
 data PlayState = PS
-  { psB      :: Player.Player   -- ^ player X info
-  , psW      :: Player.Player   -- ^ player O info
+  { psB      :: Player.Player   -- ^ Black player info
+  , psW      :: Player.Player   -- ^ White player info
   , psScore  :: Score.Score     -- ^ current score
   , psBoard  :: Board.Board     -- ^ current board
   , psTurn   :: Board.BW        -- ^ whose turn 
   , psPos    :: Board.Pos       -- ^ current cursor
   , psResult :: Board.Result () -- ^ result      
+  , psPass   :: Int             -- ^ number of consecutive passes
   } 
 
 init :: Int -> PlayState
@@ -39,6 +40,7 @@ init n = PS
   , psTurn   = Board.B
   , psPos    = head Board.positions 
   , psResult = Board.Cont ()
+  , psPass   = 0
   }
 
 isCurr :: PlayState -> Int -> Int -> Bool
@@ -63,5 +65,6 @@ nextBoard s res = case res' of
     s'   = s { psScore = sc'                   -- update the score
              , psBoard = mempty                -- clear the board
              , psTurn  = Score.startPlayer sc' -- toggle start player
+             , psPass  = 0                     -- clear the # of consecutive passes
              } 
 
