@@ -14,13 +14,13 @@ data Player = Player
 
 type Strategy = Pos     -- ^ current cursor
              -> Board   -- ^ current board
-             -> BW      -- ^ naught or cross
+             -> BW      -- ^ black or white
              -> IO Pos  -- ^ next move
 
-human :: Player 
+human :: Player
 human = Player "human" (\p _ _ -> return p)
 
-rando :: Player 
+rando :: Player
 rando = Player "machine" randomStrategy
 
 randomStrategy :: a -> Board -> b -> IO Pos
