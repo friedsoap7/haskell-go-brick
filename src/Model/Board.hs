@@ -123,7 +123,7 @@ explore b p v = (recVisited, recFoundB || found B, recFoundW || found W)
             (sp',b1',b2') = explore b neigh visited
 
 neighborsOf :: Pos -> [Pos]
-neighborsOf pos = map f directions
+neighborsOf pos = filter (pos /=) $ map f directions
   where
     f dir = dir pos
     directions = [left, right, up, down]
@@ -169,12 +169,13 @@ flipBW W = B
 removeString :: BW -> Board -> Pos -> Board
 removeString bw b p = if isEmpty then S.foldl remove b v else b
   where
-    (v,l) = recCheck S.empty bw b p
+    (v,l) = recCheck initSet bw b p
+    initSet = S.insert p S.empty
     isEmpty = foldl1 (&&) l
     remove b' p' = M.delete p' b'
 
 recCheck :: S.Set Pos -> BW -> Board -> Pos -> (S.Set Pos, [Bool])
-recCheck v bw b p = foldl go (v,[]) $ neighborsOf p
+recCheck v bw b p = foldl go (v,[]) $ (neighborsOf p)
   where
     go (v',l) pos
       | pos `M.notMember` b = (v', False:l)
