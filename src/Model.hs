@@ -50,8 +50,9 @@ isCurr s r c = Board.pRow p == r && Board.pCol p == c
 
 next :: PlayState -> Board.Result Board.Board -> Either (Board.Result ()) PlayState
 next s Board.Retry     = Right s
-next s (Board.Cont b') = Right (s { psBoard = b'
-                                  , psTurn  = Board.flipBW (psTurn s) })
+next s (Board.Cont b') = Right ( do
+  let s' = s { psBoard = Board.filterBW (Board.flipBW (psTurn s)) b' }
+  s' { psBoard = Board.filterBW (psTurn s') (psBoard s'), psTurn  = Board.flipBW (psTurn s) } )
 next s res             = nextBoard s res 
 
 nextBoard :: PlayState -> Board.Result a -> Either (Board.Result ()) PlayState
