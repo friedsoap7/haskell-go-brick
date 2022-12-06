@@ -16,6 +16,7 @@ module Model.Board
   , boardWinner
   , flipBW
   , result
+  , filterBW
 
     -- * Moves
   , up
@@ -28,6 +29,8 @@ module Model.Board
 import Prelude hiding (init)
 import qualified Data.Map as M
 import qualified Data.Set as S
+import qualified Data.Graph as G
+import qualified Data.Tree as T
 
 -------------------------------------------------------------------------------
 -- | Board --------------------------------------------------------------------
@@ -158,3 +161,24 @@ flipBW :: BW -> BW
 flipBW B = W
 flipBW W = B
 
+-------------------------------------------------------------------------------
+-- Graph-based algorithms
+-------------------------------------------------------------------------------
+
+boardAsGraph :: Board -> (G.Graph, G.Vertex -> (Maybe BW, Pos, [Pos]), Pos -> Maybe G.Vertex)
+boardAsGraph b = G.graphFromEdges $ map f positions
+  where
+    f pos   = case b ! pos of
+      Nothing -> (Nothing, pos, neighborsOf pos)
+      Just bw -> (Just bw, pos, filter (\neigh -> (b ! neigh) /= Just (flipBW bw)) (neighborsOf pos))
+
+connectedComponents :: Board -> [[(Pos, Maybe BW)]]
+connectedComponents b = map (map (flipFirst2 . vertexLookup) . T.flatten) (G.components graph)
+  where
+    flipFirst2 (x, y, _)     = (y, x)
+    (graph, vertexLookup, _) = boardAsGraph b
+
+filterBW :: BW -> Board -> Board
+filterBW bw b = b `M.withoutKeys` S.fromList (map fst (concat (filter f (connectedComponents b))))
+  where
+    f comp = all (\bw' -> snd bw' == Just bw) comp
