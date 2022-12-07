@@ -32,6 +32,7 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.Tree as T
 import Data.Maybe ( isNothing )
+import qualified Test.QuickCheck as Q
 
 -------------------------------------------------------------------------------
 -- | Board --------------------------------------------------------------------
@@ -61,6 +62,9 @@ positions = [ Pos r c | r <- [1..dim], c <- [1..dim] ]
 
 emptyPositions :: Board -> [Pos]
 emptyPositions board  = [ p | p <- positions, M.notMember p board]
+
+inBounds :: Pos -> Bool
+inBounds p = (pRow p > 0 && pRow p <= dim) && (pCol p > 0 && pCol p <= dim)
 
 init :: Board
 init = M.empty
@@ -176,3 +180,30 @@ filterBW :: BW -> Board -> Board
 filterBW bw b = b `M.withoutKeys` S.fromList (map fst (concat (filter f (connectedComponents b))))
   where
     f comp = all (\bw' -> snd bw' == Just bw) comp
+
+
+-------------------------------------------------------------------------------
+-- Tests
+-------------------------------------------------------------------------------
+
+-- generates a board that contains a region surrounded by opposing pieces
+genBoardWithCaptures :: Q.Gen (BW, Board)
+genBoardWithCaptures = do pos <- Q.elements positions
+                          bw <- Q.elements [B,W]
+                          b <- genRec bw M.empty pos
+                          return (bw,b)
+
+genRec :: BW -> Board -> Pos -> Q.Gen Board
+genRec bw m p
+      | not (inBounds p) = return m
+      | otherwise = do bw' <- Q.frequency [(1, return bw), (1, return (flipBW bw))]
+                       if bw' == bw then do b_1 <- genRec bw m $ left p
+                                            b_2 <- genRec bw b_1 $ right p
+                                            b_3 <- genRec bw b_2 $ up p
+                                            b_4 <- genRec bw b_3 $ down p
+                                            return $ M.insert p bw b_4
+                                    else return $ M.insert p bw' m
+
+-- 
+prop_allPiecesRemoved :: Q.Property
+prop_allPiecesRemoved = Q.forAll genBoardWithCaptures (\(bw, b) -> (filterBW bw b) == (M.filter (\v -> v == (flipBW bw)) b))
