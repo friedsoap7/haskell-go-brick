@@ -38,10 +38,11 @@ header s =
 -- format the currently selected cell string w/ contextual information (e.g. already occupied, superko, etc)
 -- TODO distinguish between already occupied / disallowed bc of X reason (e.g. superko) / valid
 currentCellStatus :: PlayState -> Widget String
-currentCellStatus s = case put board turn p of
-  Retry     -> withAttr redAttr $ str $ currentCellOccupiedStr s
+currentCellStatus s = case (put board turn p, psKo s) of
+  (Retry, _)   -> withAttr redAttr $ str $ currentCellOccupiedStr s
   -- Cont map  -> -- TODO
-  _         -> withAttr greenAttr $ str $ currentCellDefaultStr s
+  (_, True )   -> withAttr redAttr $ str $ currentCellSuperkoStr s
+  (_, False)   -> withAttr greenAttr $ str $ currentCellDefaultStr s
   where
     board = psBoard s
     turn = psTurn s
