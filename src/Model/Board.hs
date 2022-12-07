@@ -190,22 +190,36 @@ filterBW bw b = b `M.withoutKeys` S.fromList (map fst (concat (filter f (connect
 genBoardWithCaptures :: Q.Gen (BW, Board)
 genBoardWithCaptures = do pos <- Q.elements positions
                           bw <- Q.elements [B,W]
-                          (_,b) <- genRec (S.insert pos S.empty) bw M.empty pos
+                          (_,b) <- genRec S.empty bw M.empty pos
                           return (bw,b)
+
+-- similar to above but the inner region is empty
+genBoardWithoutCaptures :: Q.Gen (BW, S.Set Pos, Board)
+genBoardWithoutCaptures = do pos <- Q.elements positions
+                             bw <- Q.elements [B,W]
+                             (v,b) <- genRec S.empty bw M.empty pos
+                             return (bw, v, filterBW bw b)
 
 genRec :: S.Set Pos -> BW -> Board -> Pos -> Q.Gen (S.Set Pos, Board)
 genRec v bw m p
-      | not (inBounds p) || p `S.member` v  = return (v,m)
-      | otherwise = do bw' <- Q.frequency [(1, return bw), (1, return (flipBW bw))]
-                       if bw' == bw then do (v1,b_1) <- genRec v' bw m $ left p
-                                            (v2,b_2) <- genRec v1 bw b_1 $ right p
-                                            (v3,b_3) <- genRec v2 bw b_2 $ up p
-                                            (v4,b_4) <- genRec v3 bw b_3 $ down p
-                                            return $ (v4, M.insert p bw b_4)
+      | not (inBounds p) || p `S.member` v  = return (v,m) -- return if p is not in bounds or p is visited
+      | otherwise = do bw' <- Q.frequency [(2, return bw), (1, return (flipBW bw))]
+                       if bw' == bw then do (v1,b1) <- genRec v' bw m' $ left p
+                                            (v2,b2) <- genRec v1 bw b1 $ right p
+                                            (v3,b3) <- genRec v2 bw b2 $ up p
+                                            (v4,b4) <- genRec v3 bw b3 $ down p
+                                            return $ (v4, b4)
                                     else return $ (v', M.insert p bw' m)
       where
+        m' = M.insert p bw m
         v' = S.insert p v
 
--- 
+
 prop_allPiecesRemoved :: Q.Property
 prop_allPiecesRemoved = Q.forAll genBoardWithCaptures (\(bw, b) -> (filterBW bw b) == (M.filter (\v -> v == (flipBW bw)) b))
+
+
+prop_allEmptyCounted :: Q.Property
+prop_allEmptyCounted = Q.forAll genBoardWithoutCaptures (\(bw, v, b) -> ((f bw) (countE b)) == S.size v)
+  where
+    f bw = if bw == W then fst else snd
