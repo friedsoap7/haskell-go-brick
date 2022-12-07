@@ -19,10 +19,10 @@ control s ev = case ev of
   T.VtyEvent (V.EvKey V.KEnter _)      -> nextS s { psPass = 0 } =<< liftIO (play s)
   T.VtyEvent (V.EvKey (V.KChar 'p') _) -> nextS s { psPass' = psPass s, psPass = psPass s + 1 } (pass s)
   T.VtyEvent (V.EvKey (V.KChar 'r') _) -> nextS s $ resign s
-  T.VtyEvent (V.EvKey V.KUp   _)       -> Brick.continue (move up    s)
-  T.VtyEvent (V.EvKey V.KDown _)       -> Brick.continue (move down  s)
-  T.VtyEvent (V.EvKey V.KLeft _)       -> Brick.continue (move left  s)
-  T.VtyEvent (V.EvKey V.KRight _)      -> Brick.continue (move right s)
+  T.VtyEvent (V.EvKey V.KUp   _)       -> Brick.continue (move up    s {psKo = False})
+  T.VtyEvent (V.EvKey V.KDown _)       -> Brick.continue (move down  s {psKo = False})
+  T.VtyEvent (V.EvKey V.KLeft _)       -> Brick.continue (move left  s {psKo = False})
+  T.VtyEvent (V.EvKey V.KRight _)      -> Brick.continue (move right s {psKo = False})
   T.VtyEvent (V.EvKey V.KEsc _)        -> Brick.halt s
   _                                    -> Brick.continue s -- Brick.halt s
 
