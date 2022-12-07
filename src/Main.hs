@@ -1,7 +1,6 @@
 module Main where
 
 import Brick
-import Graphics.Vty.Attributes
 import qualified Graphics.Vty as V
 import Brick.BChan (newBChan, writeBChan)
 import Control.Monad (forever)
@@ -33,7 +32,7 @@ app = App
   , appChooseCursor = const . const Nothing
   , appHandleEvent  = control 
   , appStartEvent   = return
-  , appAttrMap      = const (attrMap defAttr [])
+  , appAttrMap      = const attributeMap
   }
 
 getRounds :: IO (Maybe Int)
