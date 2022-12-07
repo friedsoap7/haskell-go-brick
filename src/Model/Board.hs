@@ -27,10 +27,11 @@ module Model.Board
   where
 
 import Prelude hiding (init)
+import qualified Data.Graph as G
 import qualified Data.Map as M
 import qualified Data.Set as S
-import qualified Data.Graph as G
 import qualified Data.Tree as T
+import Data.Maybe ( isNothing )
 
 -------------------------------------------------------------------------------
 -- | Board --------------------------------------------------------------------
@@ -53,7 +54,7 @@ data Pos = Pos
 board ! pos = M.lookup pos board
 
 dim :: Int
-dim = 5
+dim = 9
 
 positions :: [Pos]
 positions = [ Pos r c | r <- [1..dim], c <- [1..dim] ]
@@ -94,31 +95,24 @@ wins b bw = let
     W -> uncurry (<) score
 
 countE :: Board -> (Int, Int)
-countE b = foldl f (0,0) positions
+countE b = foldl f (0,0) $ connectedComponents b
   where
-    f (countB, countW) startPos = (countB + fromEnum foundB, countW + fromEnum foundW)
+    f (b,w) component = if any (\(_,bw) -> isNothing bw) component
+      then
+        if all (\(_,bw) -> bw /= Just B) component
+          then (b, countEmp + w)
+        else if all (\(_,bw) -> bw /= Just W) component
+          then (countEmp + b, w)
+        else (b,w)
+      else (b,w)
       where
-        (_, foundB, foundW) = explore b startPos S.empty
+        countEmp = length $ filter g component
+        g = isNothing . snd
 
 countBW :: Board -> (Int, Int)
 countBW = M.foldlWithKey f (0,0)
   where
     f (countB, countW) _ v = (countB, countW) +++ (fromEnum (v == B), fromEnum (v == W))
-
-explore :: Board -> Pos -> S.Set Pos -> (S.Set Pos, Bool, Bool)
-explore b p v = (recVisited, recFoundB || found B, recFoundW || found W)
-  where
-    found bw = any (g bw) (neighborsOf p)
-    g bw pos = b ! pos == Just bw
-    (recVisited, recFoundB, recFoundW) = S.foldl h (visited, False, False) emptyNeighbors
-      where
-        emptyNeighbors = S.fromList $ filter f (neighborsOf p)
-          where
-            f pos = pos `M.notMember` b && pos `S.notMember` v
-        visited     = v `S.union` emptyNeighbors
-        h (sp,b1,b2) neigh = (sp `S.union` sp', b1 || b1', b2 || b2')
-          where
-            (sp',b1',b2') = explore b neigh visited
 
 neighborsOf :: Pos -> [Pos]
 neighborsOf pos = map f directions
