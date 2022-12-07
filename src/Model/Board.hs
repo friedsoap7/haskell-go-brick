@@ -23,6 +23,10 @@ module Model.Board
   , down
   , left
   , right
+    -- * Tests
+  , prop_allPiecesRemoved
+  , prop_allEmptyCounted
+  , prop_allPiecesCounted
   )
   where
 
@@ -31,7 +35,7 @@ import qualified Data.Graph as G
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.Tree as T
-import Data.Maybe ( isNothing )
+import Data.Maybe ( isNothing, fromMaybe )
 import qualified Test.QuickCheck as Q
 
 -------------------------------------------------------------------------------
@@ -214,12 +218,25 @@ genRec v bw m p
         m' = M.insert p bw m
         v' = S.insert p v
 
+genRandomBoard :: Q.Gen Board
+genRandomBoard = foldl f (return init) positions
+  where
+    f g p = do m <- g
+               bw <- Q.elements [B, W]
+               return $ M.insert p bw m
+
 
 prop_allPiecesRemoved :: Q.Property
 prop_allPiecesRemoved = Q.forAll genBoardWithCaptures (\(bw, b) -> (filterBW bw b) == (M.filter (\v -> v == (flipBW bw)) b))
 
 
 prop_allEmptyCounted :: Q.Property
-prop_allEmptyCounted = Q.forAll genBoardWithoutCaptures (\(bw, v, b) -> ((f bw) (countE b)) == S.size v)
+prop_allEmptyCounted = Q.forAll genBoardWithoutCaptures (\(bw, _, b) -> ((f bw) (countE b)) == dim * dim - M.size b)
   where
     f bw = if bw == W then fst else snd
+
+prop_allPiecesCounted :: Q.Property
+prop_allPiecesCounted = Q.forAll genRandomBoard (\b -> countBW b == (M.size (M.filter f b), M.size (M.filter g b)))
+  where
+    f = (B ==)
+    g = (W ==)
